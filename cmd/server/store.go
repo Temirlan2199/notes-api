@@ -87,7 +87,7 @@ func (s *Store) Delete(id int64) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if _, ok := s.notes[id]; !ok {
-		return errors.New("note not found")
+		return ErrNotFound
 	}
 	delete(s.notes, id)
 	return nil
