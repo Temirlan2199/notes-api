@@ -16,6 +16,7 @@ func main() {
 	mux.HandleFunc("GET /notes/{id}", makeGetNoteHandler(store))
 	mux.HandleFunc("PUT /notes/{id}", makeUpdateNoteHandler(store))
 	mux.HandleFunc("DELETE /notes/{id}", makeDeleteNoteHandler(store))
+	mux.HandleFunc("GET /notes/count", makeCreateNoteHandler(store))
 
 	server := &http.Server{
 		Addr:         ":8080",
