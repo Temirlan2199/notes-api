@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+*.iml
+
+# Бинарники Go
+*.exe
+*.test
+*.out
+
+# Переменные окружения
+.env

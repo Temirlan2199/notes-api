@@ -1,0 +1,58 @@
+### GET request to example server
+### Health check
+GET http://localhost:8080/health
+
+### Создать заметку
+POST http://localhost:8080/notes
+Content-Type: application/json
+
+{
+  "title": "Купить молоко",
+  "content": "и хлеб тоже",
+  "tags": ["покупки", "срочно"]
+}
+
+### Создать вторую заметку
+POST http://localhost:8080/notes
+Content-Type: application/json
+
+{
+  "title": "Учить Go"
+}
+
+### Получить все заметки
+GET http://localhost:8080/notes
+
+### Получить количество заметок
+GET http://localhost:8080/notes/count
+
+### Получить одну заметку
+GET http://localhost:8080/notes/1
+
+### Обновить заметку
+PUT http://localhost:8080/notes/1
+Content-Type: application/json
+
+{
+  "title": "Купить молоко",
+  "content": "3 литра",
+  "tags": ["покупки"]
+}
+
+### Удалить заметку
+DELETE http://localhost:8080/notes/2
+
+### Удалить несуществующую (должно быть 404)
+DELETE http://localhost:8080/notes/999
+
+### Невалидный JSON (должно быть 400)
+POST http://localhost:8080/notes
+Content-Type: application/json
+
+abc
+
+### Пустой title (должно быть 400)
+POST http://localhost:8080/notes
+Content-Type: application/json
+
+{"title": "", "content": "что-то"}
