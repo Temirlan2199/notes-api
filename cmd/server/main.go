@@ -1,13 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
 
 	"notes-api/internal/config"
 	"notes-api/internal/handler"
+	"notes-api/internal/middleware"
 	"notes-api/internal/repository"
 	"notes-api/internal/service"
 )
@@ -15,8 +15,7 @@ import (
 func main() {
 	cfg, err := config.Load()
 	if err != nil {
-		// Конфиг не загрузился — slog ещё нет, используем stderr напрямую
-		fmt.Fprintf(os.Stderr, "config error: %v\n", err)
+		os.Stderr.WriteString("config error: " + err.Error() + "\n")
 		os.Exit(1)
 	}
 
@@ -36,17 +35,22 @@ func main() {
 	mux.HandleFunc("PUT /notes/{id}", noteHandler.Update)
 	mux.HandleFunc("DELETE /notes/{id}", noteHandler.Delete)
 
+	// Оборачиваем mux в цепочку middleware
+	// Порядок: Recovery (внешний) → Logging → mux
+	// Recovery должен быть внешним, чтобы ловить паники из Logging тоже
+	var rootHandler http.Handler = mux
+	rootHandler = middleware.Logging(rootHandler)
+	rootHandler = middleware.Recovery(rootHandler)
+
 	server := &http.Server{
 		Addr:         cfg.Addr(),
-		Handler:      mux,
+		Handler:      rootHandler,
 		ReadTimeout:  cfg.ReadTimeout,
 		WriteTimeout: cfg.WriteTimeout,
 	}
 
 	logger.Info("server starting",
 		"addr", cfg.Addr(),
-		"read_timeout", cfg.ReadTimeout,
-		"write_timeout", cfg.WriteTimeout,
 		"log_level", cfg.LogLevel.String(),
 		"log_format", cfg.LogFormat,
 	)
