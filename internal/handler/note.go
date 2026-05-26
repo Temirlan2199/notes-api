@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -111,6 +112,7 @@ func writeServiceError(w http.ResponseWriter, err error) {
 		errors.Is(err, service.ErrContentTooLong):
 		writeError(w, http.StatusBadRequest, err.Error())
 	default:
+		slog.Error("unexpected service error", "err", err)
 		writeError(w, http.StatusInternalServerError, "internal error")
 	}
 }

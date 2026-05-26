@@ -1,8 +1,10 @@
 package main
 
 import (
-	"log"
+	"fmt"
+	"log/slog"
 	"net/http"
+	"os"
 
 	"notes-api/internal/config"
 	"notes-api/internal/handler"
@@ -13,8 +15,13 @@ import (
 func main() {
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("config error: %v", err)
+		// Конфиг не загрузился — slog ещё нет, используем stderr напрямую
+		fmt.Fprintf(os.Stderr, "config error: %v\n", err)
+		os.Exit(1)
 	}
+
+	logger := newLogger(cfg)
+	slog.SetDefault(logger)
 
 	repo := repository.NewMemoryRepository()
 	noteSvc := service.NewNoteService(repo)
@@ -36,8 +43,29 @@ func main() {
 		WriteTimeout: cfg.WriteTimeout,
 	}
 
-	log.Printf("Сервер запускается на http://localhost%s", cfg.Addr())
+	logger.Info("server starting",
+		"addr", cfg.Addr(),
+		"read_timeout", cfg.ReadTimeout,
+		"write_timeout", cfg.WriteTimeout,
+		"log_level", cfg.LogLevel.String(),
+		"log_format", cfg.LogFormat,
+	)
+
 	if err := server.ListenAndServe(); err != nil {
-		log.Fatal(err)
+		logger.Error("server failed", "err", err)
+		os.Exit(1)
 	}
+}
+
+func newLogger(cfg *config.Config) *slog.Logger {
+	opts := &slog.HandlerOptions{Level: cfg.LogLevel}
+
+	var handler slog.Handler
+	if cfg.LogFormat == "json" {
+		handler = slog.NewJSONHandler(os.Stdout, opts)
+	} else {
+		handler = slog.NewTextHandler(os.Stdout, opts)
+	}
+
+	return slog.New(handler)
 }
